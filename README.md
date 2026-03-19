@@ -50,7 +50,7 @@ python qkd_1decoy_sim.py
 
 ---
 
-### `qkd_phase_error.xlsx`
+### `qkd_1decoy_phase_error.xlsx`
 Interactive Excel spreadsheet for the 1-decoy protocol with all calculations step by step.
 
 **Sheet 1 — Phase Error Calculation:**
