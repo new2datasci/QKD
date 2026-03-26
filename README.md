@@ -40,7 +40,7 @@ In Lim et al. the labels are swapped — all Lim equations have been relabelled 
 **Run:**
 ```bash
 pip install numpy matplotlib
-python3 qkd_analysis.py
+python3 qkd_1decoy_analysis.py
 ```
 
 **Key corrected formulas:**
