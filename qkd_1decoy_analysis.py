@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 mu1      = 0.5    # signal intensity
 mu2      = 0.1    # decoy intensity
 p1       = 0.3    # prob of signal  (p2 = 1 - p1)
-p2       = 0.70
+p2       = 0.7
 pZ       = 0.90    # Z-basis probability
 pX       = 0.10    # X-basis probability
 nZ       = 1e7     # Z-basis block size
@@ -42,7 +42,7 @@ dead_us  = 10.0    # detector dead time (µs)
 odr_losses = 11.4  # minimum attenuation losses other than Bob detector efficiency
 
 # ── Sweep ────────────────────────────────────────────────────
-d_arr = np.linspace(1, 260, 600)
+d_arr = np.linspace(1, 400, 600)
 
 # ============================================================
 #  CORE FUNCTIONS
@@ -59,8 +59,11 @@ t0 = p1*np.exp(-mu1) + p2*np.exp(-mu2)
 t1 = p1*np.exp(-mu1)*mu1 + p2*np.exp(-mu2)*mu2
 
 
-def compute_all(d_km, e_det=edet):
+def compute_all(d_km, e_det=edet, p1=p1, p2=p2):
     eta = 10**(-(alpha*d_km+odr_losses)/10) * eta_bob
+    """ t0 = p1*np.exp(-mu1) + p2*np.exp(-mu2)
+    t1 = p1*np.exp(-mu1)*mu1 + p2*np.exp(-mu2)*mu2
+   """
     Pd1 = 1 - np.exp(-mu1*eta) + pdc
     Pd2 = 1 - np.exp(-mu2*eta) + pdc
     Pdt = p1*Pd1 + p2*Pd2
@@ -123,26 +126,44 @@ def compute_all(d_km, e_det=edet):
         gam = 0.0
     phi = min(phi_raw+gam, 0.5)
 
+    # ── φ^u_Z  Tomamichel Eq. 2  (parallel) ─────────────────────
+    # k = nX (X-basis/parameter), n = nZ (Z-basis/key)
+    nX = nZ * (pX/pZ)**2
+    if nX > 0 and nZ > 0:
+        mu_tom = np.sqrt((nX + nZ)/(nX * nZ)
+                         * (nZ + 1)/nZ
+                         * np.log(4/esec))
+    else:
+        mu_tom = 0.5
+    phi_tom = min(phi_raw + mu_tom, 0.5)
+
+
     # ── ℓ  Eq. A25 ──────────────────────────────────────────
     overhead = 6*np.log2(K/esec) + np.log2(2/ecor)
     lEC      = fEC * hbin(eobs) * nZ
     ell      = max(sz0l + sz1l*(1-hbin(phi)) - lEC - overhead, 0.0)
+    ell_tom  = max(sz0l + sz1l*(1-hbin(phi_tom)) - lEC - overhead, 0.0)
+
 
     # ── SKR  Eq. B8 ─────────────────────────────────────────
     cdt  = 1/(1 + f_rep*Pdt*dead_us*1e-6)
     Ntot = nZ / (cdt*pZ**2*Pdt)
     skr  = ell * f_rep / Ntot if Ntot > 0 else 0.0
+    skr_tom  = ell_tom * f_rep / Ntot if Ntot > 0 else 0.0
 
     return dict(
         nZ1pw=nZ1pw, nZ2mw=nZ2mw,
         sz0u=sz0u,   sz0l=sz0l,   sz0l_raw=sz0l_raw,
         sz1l=sz1l,   ell=ell,     skr=skr,
-        phi=phi,     eobs=eobs
+        phi=phi,     eobs=eobs, 
+        phi_tom=phi_tom, mu_tom=mu_tom,
+        ell_tom=ell_tom, skr_tom=skr_tom    # ← new
+
     )
 
 
 # ── Sweep at default e_det ───────────────────────────────────
-keys = ['nZ1pw','nZ2mw','sz0u','sz0l','sz1l','ell','skr','sz0l_raw']
+keys = ['nZ1pw','nZ2mw','sz0u','sz0l','sz1l','ell','skr','sz0l_raw','phi','phi_tom','mu_tom','ell_tom','skr_tom']
 res  = {k: np.full(len(d_arr), np.nan) for k in keys}
 
 for i, d in enumerate(d_arr):
@@ -168,11 +189,13 @@ fig1.patch.set_facecolor('#FAFAFA')
 fig1.text(0.5, 0.975,
     "1-Decoy State QKD — Security Bounds  (Rusca et al. 2018)",
     ha='center', fontsize=13, fontweight='bold', color=NAVY)
+
 fig1.text(0.5, 0.960,
-    rf"$\mu_1={mu1}$  $\mu_2={mu2}$  $p_{{\mu_1}}={p1}$  "
-    rf"$p_Z={pZ}$  $n_Z=10^7$  $\varepsilon_{{sec}}=10^{{-9}}$  "
-    rf"$\eta_{{Bob}}={eta_bob}$  $p_{{dc}}={pdc:.0e}$  "
-    rf"$e_{{det}}={edet*100:.0f}\%$  $f_{{rep}}=80\,\mathrm{{MHz}}$",
+    (rf"$\mu_1={mu1}$  $\mu_2={mu2}$  $p_{{\mu_1}}={p1}$  "
+     rf"$p_Z={pZ}$  $n_Z=10^7$  $\varepsilon_{{sec}}=10^{{-9}}$  "
+     rf"$\eta_{{Bob}}={eta_bob}$  $p_{{dc}}={pdc:.0e}$  "
+     rf"$e_{{det}}={edet*100:.0f}\%$  "
+     rf"$f_{{rep}}={f_rep/1e6:.0f}\ \mathrm{{MHz}}$"),
     ha='center', fontsize=8.5, color='#444444')
 
 gs = gridspec.GridSpec(3, 2, figure=fig1,
@@ -329,6 +352,7 @@ style(ax5,
 # ── Panel 6: SKR ─────────────────────────────────────────────
 ax6 = fig1.add_subplot(gs[2, 1])
 ax6.semilogy(d_arr, res['skr'], color=BLUE, lw=2.0, label='SKR')
+ax6.semilogy(d_arr, res['skr_tom'], color=AMBER, lw=1.8, ls='--', label='SKR  (Tomamichel μ)')
 ax6.axhline(10000, color=AMBER, lw=0.9, ls=':', alpha=0.8, label='10 kbits/s')
 ax6.axhline(10,    color=GREY,  lw=0.9, ls=':', alpha=0.8, label='10 bits/s')
 ax6.legend(fontsize=7.5, loc='upper right')
@@ -339,6 +363,32 @@ style(ax6,
 
 plt.savefig('/Users/ruchithareja/Documents/Python Decoy/Decoy/qkd_bounds.png', dpi=150, bbox_inches='tight', facecolor='#FAFAFA')
 print("Figure 1 saved")
+
+""" # ============================================================
+#  p1/p2 PROBABILITY SCAN — max range and SKR @ operating point
+# ============================================================
+
+p1_values = [0.01, 0.02, 0.03, 0.04, 0.05]
+d_arr_scan = np.linspace(1, 400, 600)
+d_op       = 83.8   # 25 dB operating point (km)
+
+print(f"\n{'p1':>6} {'p2':>6} {'max_range (km)':>16} {'SKR @ 25dB (b/s)':>18}")
+print("-" * 50)
+
+for p1_test in p1_values:
+    p2_test  = 1 - p1_test
+    max_range = 0.0
+    skr_25    = 0.0
+    for d in d_arr_scan:
+        r = compute_all(d, p1=p1_test, p2=p2_test)
+        if r is not None and r['skr'] >= 1.0:
+            max_range = d
+            skr_at_max = r['skr']
+        if abs(d - d_op) < 0.35:
+            if r is not None:
+                skr_25 = r['skr']
+    print(f"{p1_test:>6.2f} {p2_test:>6.2f} {max_range:>16.1f} "
+          f"{skr_25:>18.0f}  (SKR@max={skr_at_max:.1f})") """
 
 # ============================================================
 #  FIGURE 2 — SKR vs Distance for varying QBER
@@ -420,7 +470,201 @@ ax_phi2.text(0.02, 0.97,
     bbox=dict(boxstyle='round,pad=0.4', fc='#F0FFF0',
               ec=GREEN, alpha=0.95))
 
+
 plt.tight_layout()
 plt.savefig('/Users/ruchithareja/Documents/Python Decoy/Decoy/qkd_qber_comparison.png', dpi=150, bbox_inches='tight', facecolor='#FAFAFA')
-plt.show()
+#plt.show()
 print("Figure 2 saved")
+
+# ============================================================
+#  FIGURE 3 — Rusca vs Tomamichel: φ, ℓ, SKR comparison
+# ============================================================
+
+fig3, axes = plt.subplots(1, 3, figsize=(15, 5))
+fig3.patch.set_facecolor('#FAFAFA')
+fig3.suptitle(
+    r"Rusca $\gamma$ vs Tomamichel $\mu$ — Phase Error Correction Comparison"
+    rf"  ($n_Z=10^7$,  $n_X \approx {nZ*(pX/pZ)**2:.0f}$,  "
+    rf"$\eta_{{Bob}}={eta_bob}$)",
+    fontsize=11, fontweight='bold', color=NAVY, y=1.01)
+
+ax_phi3, ax_ell3, ax_skr3 = axes
+
+# ── Panel 1: Phase error comparison ──────────────────────────
+ax_phi3.plot(d_arr, res['phi'],
+             color=BLUE, lw=2.0,
+             label=r'$\phi^u_Z = \phi_{raw} + \gamma$  (Rusca)')
+ax_phi3.plot(d_arr, res['phi_tom'],
+             color=AMBER, lw=1.8, ls='--',
+             label=r'$\phi^u_Z = \phi_{raw} + \mu$  (Tomamichel)')
+ax_phi3.axhline(0.5, color=GREY, lw=0.8, ls=':', alpha=0.6,
+                label=r'$\phi=0.5$ (no key)')
+ax_phi3.set_xlabel('Fibre distance (km)', fontsize=9)
+ax_phi3.set_ylabel(r'$\phi^u_Z$', fontsize=9)
+ax_phi3.set_title(r'Phase Error $\phi^u_Z$', fontsize=10,
+                  fontweight='bold', color=NAVY)
+ax_phi3.set_ylim(0, 0.55)
+ax_phi3.set_xlim(d_arr[0], d_arr[-1])
+ax_phi3.legend(fontsize=8, loc='upper left')
+ax_phi3.grid(True, alpha=0.25, lw=0.5)
+ax_phi3.spines[['top','right']].set_visible(False)
+ax_phi3.text(0.02, 0.97,
+    rf"$\gamma$: Rusca Eq. A21 — depends on $s^l_{{Z,1}}, s^l_{{X,1}}$" + "\n"
+    rf"$\mu$: Tomamichel Eq. 2 — depends only on $n_Z, n_X, \varepsilon_{{sec}}$",
+    transform=ax_phi3.transAxes, fontsize=7, va='top',
+    bbox=dict(boxstyle='round,pad=0.3', fc='#F5F5F5', ec='#CCCCCC', alpha=0.9))
+
+# ── Panel 2: Secret key length comparison ────────────────────
+pos_r = ~np.isnan(res['ell'])     & (res['ell']     > 0)
+pos_t = ~np.isnan(res['ell_tom']) & (res['ell_tom'] > 0)
+
+ax_ell3.semilogy(d_arr, res['ell'],
+                 color=BLUE, lw=2.0,
+                 label=r'$\ell$  Rusca')
+ax_ell3.semilogy(d_arr, res['ell_tom'],
+                 color=AMBER, lw=1.8, ls='--',
+                 label=r'$\ell$  Tomamichel')
+
+# Mark max range for each
+if pos_r.any():
+    d_max_r = d_arr[pos_r][-1]
+    ax_ell3.axvline(d_max_r, color=BLUE,  lw=1.0, ls='--', alpha=0.6)
+    ax_ell3.text(d_max_r-2, 2e4, f'{d_max_r:.0f} km',
+                 fontsize=7, color=BLUE, ha='right')
+if pos_t.any():
+    d_max_t = d_arr[pos_t][-1]
+    ax_ell3.axvline(d_max_t, color=AMBER, lw=1.0, ls='--', alpha=0.6)
+    ax_ell3.text(d_max_t+2, 2e4, f'{d_max_t:.0f} km',
+                 fontsize=7, color=AMBER, ha='left')
+
+ax_ell3.set_xlabel('Fibre distance (km)', fontsize=9)
+ax_ell3.set_ylabel('bits', fontsize=9)
+ax_ell3.set_title(r'Secret Key Length $\ell$  [Rusca Eq. A25]', fontsize=10,
+                  fontweight='bold', color=NAVY)
+ax_ell3.set_xlim(d_arr[0], d_arr[-1])
+ax_ell3.legend(fontsize=8, loc='upper right')
+ax_ell3.grid(True, alpha=0.25, lw=0.5)
+ax_ell3.spines[['top','right']].set_visible(False)
+
+# ── Panel 3: SKR comparison ───────────────────────────────────
+ax_skr3.semilogy(d_arr, res['skr'],
+                 color=BLUE, lw=2.0,
+                 label='SKR  Rusca')
+ax_skr3.semilogy(d_arr, res['skr_tom'],
+                 color=AMBER, lw=1.8, ls='--',
+                 label='SKR  Tomamichel')
+ax_skr3.axhline(10000, color=GREY, lw=0.8, ls=':', alpha=0.7,
+                label='10 kbits/s')
+ax_skr3.axhline(10,    color=GREY, lw=0.8, ls=':', alpha=0.5,
+                label='10 bits/s')
+ax_skr3.set_xlabel('Fibre distance (km)', fontsize=9)
+ax_skr3.set_ylabel('bits/s', fontsize=9)
+ax_skr3.set_title('Secret Key Rate  [Rusca Eq. B8]', fontsize=10,fontweight='bold', color=NAVY)
+ax_skr3.set_xlim(d_arr[0], d_arr[-1])
+ax_skr3.legend(fontsize=8, loc='upper right')
+ax_skr3.grid(True, alpha=0.25, lw=0.5)
+ax_skr3.spines[['top','right']].set_visible(False)
+
+# μ value annotation (it's constant across distance)
+mu_val = res['phi_tom'][0] - res['phi'][0] if not np.isnan(res['phi_tom'][0]) else 0
+ax_skr3.text(0.02, 0.04,
+    rf"$\mu_{{tom}} = {mu_val:.5f}$ (constant, depends only on $n_Z, n_X, \varepsilon_{{sec}}$)",
+    transform=ax_skr3.transAxes, fontsize=7,
+    bbox=dict(boxstyle='round,pad=0.3', fc='#FFF8F0', ec=AMBER, alpha=0.9))
+
+plt.tight_layout()
+plt.savefig('/Users/ruchithareja/Documents/Python Decoy/Decoy/qkd_tomamichel_comparison.png',
+            dpi=150, bbox_inches='tight', facecolor='#FAFAFA')
+
+print("Figure 3 saved")
+
+# ============================================================
+#  FIGURE 4 — Q_tol+μ vs φ(γ) vs φ(μ) for varying e_det
+# ============================================================
+
+edets_fig4  = [0.01, 0.02, 0.03, 0.05]
+labels_fig4 = ['1%', '2%', '3%', '5%']
+colors_fig4 = [NAVY, BLUE, GREEN, AMBER]
+
+fig4, ax4 = plt.subplots(figsize=(10, 6))
+fig4.patch.set_facecolor('#FAFAFA')
+
+for edet_v, lbl, col in zip(edets_fig4, labels_fig4, colors_fig4):
+
+    phi_rusca = np.full(len(d_arr), np.nan)
+    phi_tom_v = np.full(len(d_arr), np.nan)
+    qtol_v    = np.full(len(d_arr), np.nan)
+
+    for i, d in enumerate(d_arr):
+        eta = 10**(-alpha*d/10) * eta_bob
+        r   = compute_all(d, e_det=edet_v)
+        if r is None:
+            continue
+
+        # φ(γ) — Rusca
+        phi_rusca[i] = r['phi']
+
+        # φ(μ) — Tomamichel
+        phi_tom_v[i] = r['phi_tom']
+
+        # Q_tol + μ  — Tomamichel Eq. 2 argument inside h()
+        Q_tol = (eta * edet_v + pdc/2) / (eta + pdc)
+        nX_v  = nZ * (pX/pZ)**2
+        mu_v  = np.sqrt((nZ + nX_v)/(nZ * nX_v)
+                        * (nX_v + 1)/nX_v
+                        * np.log(4/esec))
+        qtol_v[i] = min(Q_tol + mu_v, 0.5)
+
+    # Plot all three for this e_det
+    ax4.plot(d_arr, phi_rusca, color=col, lw=2.0, ls='-',
+             label=rf'$\phi_{{raw}}+\gamma$  $e_{{det}}$={lbl}')
+    ax4.plot(d_arr, phi_tom_v, color=col, lw=1.6, ls='--',
+             label=rf'$\phi_{{raw}}+\mu$  $e_{{det}}$={lbl}')
+    ax4.plot(d_arr, qtol_v,    color=col, lw=1.2, ls=':',
+             label=rf'$Q_{{tol}}+\mu$  $e_{{det}}$={lbl}')
+
+ax4.axhline(0.5, color=GREY, lw=0.8, ls='--', alpha=0.5,
+            label=r'$\phi=0.5$ (no key)')
+ax4.set_xlabel('Fibre distance (km)', fontsize=10)
+ax4.set_ylabel('Phase error estimate', fontsize=10)
+ax4.set_title(
+    r'Phase Error Comparison: $\phi_{raw}+\gamma$  vs  $\phi_{raw}+\mu$  vs  $Q_{tol}+\mu$'
+    '\n'
+    r'$Q_{tol} = (\eta \cdot e_{det} + p_{dc}/2)\,/\,(\eta + p_{dc})$',
+    fontsize=10, fontweight='bold', color=NAVY)
+ax4.set_xlim(d_arr[0], d_arr[-1])
+ax4.set_ylim(0, 0.55)
+ax4.grid(True, alpha=0.25, lw=0.5)
+ax4.spines[['top','right']].set_visible(False)
+
+# Clean legend — group by line style
+from matplotlib.lines import Line2D
+legend_style = [
+    Line2D([0],[0], color='black', lw=2.0, ls='-',  label=r'$\phi_{raw}+\gamma$  (Rusca)'),
+    Line2D([0],[0], color='black', lw=1.6, ls='--', label=r'$\phi_{raw}+\mu$  (Tomamichel)'),
+    Line2D([0],[0], color='black', lw=1.2, ls=':',  label=r'$Q_{tol}+\mu$  (Tomamichel full)'),
+]
+legend_color = [
+    Line2D([0],[0], color=colors_fig4[i], lw=3.0,
+           label=rf'$e_{{det}}$={labels_fig4[i]}')
+    for i in range(len(edets_fig4))
+]
+leg1 = ax4.legend(handles=legend_style, fontsize=8,
+                  loc='upper left', title='Line style')
+ax4.add_artist(leg1)
+ax4.legend(handles=legend_color, fontsize=8,
+           loc='center left', title='e_det value')
+
+ax4.text(0.98, 0.04,
+    rf"$\mu_{{tom}} = {mu_v:.5f}$ (constant)"
+    "\n"
+    rf"$n_Z={nZ:.0e}$,  $n_X \approx {nZ*(pX/pZ)**2:.0f}$",
+    transform=ax4.transAxes, fontsize=8, ha='right',
+    bbox=dict(boxstyle='round,pad=0.35', fc='#FFF8F0', ec=AMBER, alpha=0.9))
+
+plt.tight_layout()
+plt.savefig('/Users/ruchithareja/Documents/Python Decoy/Decoy/qkd_phase_comparison.png',
+            dpi=150, bbox_inches='tight', facecolor='#FAFAFA')
+print("Figure 4 saved")
+
+plt.show()
