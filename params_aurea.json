@@ -1,0 +1,22 @@
+{
+    "label": "AUREA SPD Our system",
+    "mu1": 0.5,
+    "mu2": 0.1,
+    "p1": 0.3,
+    "p2": 0.7,
+    "pZ": 0.9,
+    "pX": 0.1,
+    "nZ": 1000000.0,
+    "esec": 1e-09,
+    "ecor": 1e-15,
+    "fEC": 1.16,
+    "K": 19,
+    "eta_bob": 0.2,
+    "pdc": 6e-07,
+    "alpha": 0.2,
+    "edet": 0.01,
+    "f_rep": 80000000.0,
+    "dead_us": 10.0,
+    "odr_losses": 11.4,
+    "d_max": 260
+}
