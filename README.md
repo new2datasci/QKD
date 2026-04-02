@@ -17,59 +17,14 @@ python3 qkd_1decoy_analysis.py params_rusca.json    # Rusca 2018 SNSPD reference
 
 ## Config Files
 
-### `params_aurea.json` — AUREA SPD (our system)
-```json
-{
-  "label":          "AUREA SPD Our system",
-  "mu1":            0.5,
-  "mu2":            0.1,
-  "p1":             0.3,
-  "p2":             0.7,
-  "pZ":             0.9,
-  "pX":             0.1,
-  "nZ":             1000000,
-  "esec":           1e-9,
-  "ecor":           1e-15,
-  "fEC":            1.16,
-  "K":              19,
-  "eta_bob":        0.20,
-  "pdc":            6e-7,
-  "alpha":          0.2,
-  "edet":           0.01,
-  "f_rep":          80000000,
-  "dead_us":        10.0,
-  "odr_losses":     11.4,
-  "d_max":          260,
-  "d_operating_km": 25.0
-}
-```
+Two config files are included in the repository:
 
-### `params_rusca.json` — Rusca 2018 SNSPD reference
-```json
-{
-  "label":          "Rusca 2018 SNSPD",
-  "mu1":            0.5,
-  "mu2":            0.1,
-  "p1":             0.5,
-  "p2":             0.5,
-  "pZ":             0.9,
-  "pX":             0.1,
-  "nZ":             1e7,
-  "esec":           1e-9,
-  "ecor":           1e-15,
-  "fEC":            1.16,
-  "K":              19,
-  "eta_bob":        0.50,
-  "pdc":            1e-8,
-  "alpha":          0.2,
-  "edet":           0.01,
-  "f_rep":          1e9,
-  "dead_us":        0.1,
-  "odr_losses":     0.0,
-  "d_max":          400,
-  "d_operating_km": 25.0
-}
-```
+- **`params_aurea.json`** — AUREA SPD system (our hardware): η_Bob=0.20, p_dc=6×10⁻⁷, f_rep=80 MHz, dead_time=10 μs, odr_losses=11.4 dB, nZ=10⁶
+- **`params_rusca.json`** — Rusca 2018 SNSPD reference: η_Bob=0.50, p_dc=10⁻⁸, f_rep=1 GHz, dead_time=0.1 μs, odr_losses=0 dB, nZ=10⁷
+
+All other parameters (μ₁, μ₂, pZ, pX, α, edet, εsec, εcor, fEC, K) are shared and defined in both files.  
+Output figures are automatically named with the config label so files from different configs never overwrite each other.
+
 
 ---
 
