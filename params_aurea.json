@@ -18,5 +18,6 @@
     "f_rep": 80000000.0,
     "dead_us": 10.0,
     "odr_losses": 11.4,
-    "d_max": 260
+    "d_max": 260, 
+    "Protocol_symmetric": false
 }
