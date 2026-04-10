@@ -221,14 +221,15 @@ def compute_all(d_km, e_det=edet, p1=p1, pZ_in=None, mu1_in=None, mu2_in=None):
         mu_tom = 0.5
     phi_tom = min(phi_raw + mu_tom, 0.5)
     eobs_sp = eobs * (nZ / sz1l) if sz1l > 0 else 0.5
-    phi_sp = min(eobs_sp + mu_tom, 0.5)
+    #phi_sp = min(eobs_sp + mu_tom, 0.5)
+    phi_sp = min(mX/nX + mu_tom, 0.5) if nX > 0 else 0.5
 
     # ── ℓ  Eq. A25 ──────────────────────────────────────────
     overhead = 6*np.log2(K/esec) + np.log2(2/ecor)
     lEC      = fEC * hbin(eobs) * nZ
     ell      = max(sz0l + sz1l*(1-hbin(phi)) - lEC - overhead, 0.0)
     ell_tom  = max(sz0l + sz1l*(1-hbin(phi_tom)) - lEC - overhead, 0.0)
-    ell_sp = max(sz1l*(1-hbin(phi_sp)) - lEC - np.log2(2/(esec**2*ecor)), 0.0)
+    ell_sp = max(nZ*(1-hbin(phi_sp)) - lEC - np.log2(2/(esec**2*ecor)), 0.0)
 
 
 
