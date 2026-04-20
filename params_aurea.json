@@ -1,12 +1,13 @@
 {
     "label": "AUREA SPD Our system",
-    "mu1": 0.5,
-    "mu2": 0.1,
-    "p1": 0.3,
-    "p2": 0.7,
+    "coeff": 0.78,
+    "mu1": 0.17,
+    "mu2": 0.05,
+    "p1": 0.51,
+    "p2": 0.0,
     "pZ": 0.9,
-    "pX": 0.1,
-    "nZ": 1000000.0,
+    "pX": 0.0,
+    "nZ": 10000000.0,
     "esec": 1e-09,
     "ecor": 1e-15,
     "fEC": 1.16,
@@ -14,10 +15,22 @@
     "eta_bob": 0.2,
     "pdc": 6e-07,
     "alpha": 0.23,
-    "edet": 0.01,
+    "edet": 0.03,
     "f_rep": 80000000.0,
-    "dead_us": 10.0,
+    "dead_us": 15.0,
     "odr_losses": 11.4,
-    "d_max": 260, 
-    "Protocol_symmetric": false
+    "d_max": 100,
+    "d_operating_km": 25.0,
+    "Protocol_symmetric": false,
+    "plots_to_generate": [1,2,"2a",4,5], 
+    "afterpulse": {
+        "T_max_us": 100.0,
+        "qber_calibration": {
+                                 "dead_time_us": [6, 10, 20, 40],
+                                 "qber_pct":     [2.4, 1.4, 1.1, 1.0]
+                            },
+     "timestamp_file": "dt6_counts750_nozeros_actually.txt",
+     "clock_hz": 80000000.0
+    }
+
 }
