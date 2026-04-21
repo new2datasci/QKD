@@ -17,6 +17,10 @@ This code simulates the secret key rate (SKR) for a 1-decoy state QKD system und
 # Run with AUREA hardware config
 python qkd_1decoy_analysis_v13_v2.py params_aurea.json
 
+# Run with AUREA hardware config : Optimized parameter table for H/W Team 
+python hardware_table.py params_aurea.json
+(Prints results on terminal as well as saved in hardware_calibration_AUREA_SPD_Our_system.png)
+
 # Run with Rusca 2018 SNSPD config
 python qkd_1decoy_analysis_v13_v2.py params_rusca.json
 ```
