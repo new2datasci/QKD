@@ -15,10 +15,10 @@ This code simulates the secret key rate (SKR) for a 1-decoy state QKD system und
 
 ```bash
 # Run with AUREA hardware config
-python qkd_1decoy_analysis_v8_0.py params_aurea.json
+python qkd_1decoy_analysis_v13_v2.py params_aurea.json
 
 # Run with Rusca 2018 SNSPD config
-python qkd_1decoy_analysis_v8_0.py params_rusca.json
+python qkd_1decoy_analysis_v13_v2.py params_rusca.json
 ```
 
 ## Configuration
@@ -79,7 +79,7 @@ SKR = ℓ · f_rep / N_tot
 
 ### Tomamichel Single-Photon SKR (Eq. 2)
 ```
-ℓ_sp = s^l_{Z,1}·[1 − h(e_obs_sp + μ)] − f_EC·h(e_obs)·n_Z − log₂(2/(ε²_sec·ε_cor))
+ℓ_sp = n_Z[1 − h(e_obs_sp + μ)] − f_EC·h(e_obs)·n_Z − log₂(2/(ε²_sec·ε_cor))
 where:
   e_obs_sp = e_obs × (n_Z / s^l_{Z,1})    — single-photon QBER
   μ = √[(n+k)/(nk) · (k+1)/k · ln(4/ε_sec)]   — statistical fluctuation (n=n_Z, k=n_X)
