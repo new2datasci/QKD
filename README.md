@@ -76,6 +76,15 @@ Distance sweep at config e_det showing all intermediate quantities:
 - Phase error (Rusca φ vs Tomamichel φ_sp)
 - Secret key length ℓ and SKR (both Rusca and Tomamichel)
 
+### Fig 2 — Per-Distance Optimization (4 panels)
+Detailed optimization at config e_det showing:
+- **(a)** Optimal parameter evolution vs distance: μ₁, μ₂, p_μ₁ (and p_Z if asymmetric)
+- **(b)** Optimized SKR vs current config SKR — shows improvement from optimization
+- **(c)** Numerical table of optimal parameters at reference distances
+- **(d)** Summary statistics: max range, SKR at operating distance, gain from optimization
+
+**Note:** Uses finer optimization grid than Fig 2a/3 for single e_det analysis.
+
 ### Fig 2a — Optimized Parameters & SKR vs e_det
 Multi-panel view showing optimization results:
 - Optimal (μ₁, μ₂, p_μ₁, p_Z) evolution vs e_det at d=0, 50 km
@@ -151,6 +160,8 @@ where:
   t_d = detector dead time (μs)
   T_max = measurement window (μs)
 ```
+
+This integrates the exponential decay A·exp(-t/τ) from t_d to T_max.
 
 High-signal QBER approximation (valid when η_sys·k > 0.1):
 ```
