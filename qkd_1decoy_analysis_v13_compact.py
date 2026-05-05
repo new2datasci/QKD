@@ -348,18 +348,23 @@ def compute_all(d_km, e_det=edet, p1=p1, pZ_in=None, mu1_in=None, mu2_in=None,
 
 # Coarsened grids for the (d x edet) cache
 GRIDS_CACHE = dict(
-    mu1_scan = np.linspace(0.12, 1.0, 8),
+    #mu1_scan = np.linspace(0.12, 1.0, 8),
+    #mu2_frac = np.linspace(0.15, 0.85, 6),
+    #pm1_scan = np.linspace(0.02, 0.90, 12),
+    #pZ_scan  = np.arange(0.70, 0.96, 0.035),
+    mu1_scan = np.linspace(0.12, 0.90, 8),
     mu2_frac = np.linspace(0.15, 0.85, 6),
     pm1_scan = np.linspace(0.02, 0.90, 12),
-    pZ_scan  = np.arange(0.70, 0.96, 0.035),
+    pZ_scan  = np.arange(0.50, 0.96, 0.035),
 )
 
 # Finer grids for legacy Fig 2 (per-distance optimisation at config edet)
 GRIDS_FIG2 = dict(
-    mu1_scan = np.linspace(0.12, 1.0, 10),
+    mu1_scan = np.linspace(0.12, 0.90, 10),
     mu2_frac = np.linspace(0.15, 0.85, 8),
     pm1_scan = np.linspace(0.02, 0.90, 20),
-    pZ_scan  = np.arange(0.70, 0.96, 0.02),
+    #pZ_scan  = np.arange(0.70, 0.96, 0.02),
+    pZ_scan  = np.arange(0.50, 0.96, 0.02),
 )
 
 
