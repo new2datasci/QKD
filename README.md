@@ -20,6 +20,7 @@ python qkd_1decoy_analysis_v13_compact.py params_aurea.json
 
 # Hardware calibration table (standalone tool for hardware team)
 python hardware_table.py params_aurea.json
+edet_range, and distaces (can be edited on Line 386,387 , alternatively search by "distances" or "edet-range")  
 ```
 
 The hardware tool generates:
