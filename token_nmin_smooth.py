@@ -41,6 +41,7 @@ from scipy.optimize import brentq, minimize
 # F_REP      : source repetition rate = 40 million qubits per second
 # ETA        : end-to-end detection efficiency (Bob optics x fibre x detector)
 C, EPS_UNF, F_REP = 18, 1e-10, 80e6   # VeriQloud source: 80 million qubits/s
+COEFF, DEAD_US = 0.78, 15
 EPS1  = EPS_UNF / C            # Hoeffding / mu slack  (18-way budget, fixed)
 EPS_S = EPS_UNF / C            # smoothing slack for the chain-rule penalty (free; pin later)
 PEN_WCS = 4 * math.log2(1 / EPS_S) + 3   # eq (22) penalty: two chain rules @ slack EPS_S
@@ -148,7 +149,8 @@ def nmin_cfg(ge, cfg, sampling):
         if c is None: return -PEN_WCS
         b, sZ, sX = c
         ph = phi(10 ** lg, ge, cfg, sampling)
-        return sZ * (1 - hbin(ph) - hbin(ge)) - PEN_WCS
+        n = 10 ** lg
+        return sZ * (1 - hbin(ph)) - n * hbin(ge) - PEN_WCS
     try:
         if g(16) <= 0: return np.inf
         if g(2) > 0: return 1e2                     # search n in [1e2, 1e16]
@@ -169,7 +171,9 @@ def _obj(x, ge, sampling):                         # objective = pulses sent = 2
         return 1e18
     n = nmin_cfg(ge, (mu1, frac * mu1, p1, p2), sampling)
     if not np.isfinite(n): return 1e18
-    return 2 * n / pdet(mu1, frac * mu1, p1, p2)
+    Pdet = pdet(mu1, frac * mu1, p1, p2)
+    cdt = COEFF/(1 + F_REP*Pdet*DEAD_US*1e-6)
+    return 2 * n / (cdt * Pdet)
 
 # Nelder-Mead search over the intensities from several warm starts.
 # Returns the best (n_min, pulses_sent, intensity_config) found.
@@ -278,6 +282,7 @@ def main():
     ax.legend(loc='upper left', fontsize=9.5); fig.tight_layout()
     fig.savefig("token_nmin_mu_vs_gamma.png", dpi=160, bbox_inches="tight")
 
+
     # --- table: n_min, photons sent, acquisition time (40M qubit/s) ---
     print(f"C={C}, Q*={100*Q_STAR:.2f}%, eta={ETA:.3e}, rate={F_REP/1e6:.0f}M qubit/s, eps_unf={EPS_UNF:.0e}")
     print(f"{'ge%':>5} {'SP':>10} {'WCS-mu':>11} {'photons':>11} {'time':>10}")
@@ -288,6 +293,8 @@ def main():
               else f"{t/3600:.2g} h" if t < 2*86400 else f"{t/86400:.2g} d")
         print(f"{100*g:5.1f} {nmin_sp(g):10,.0f} {n:11,.0f} {pul:11.2e} {tt:>10}")
     print("\nsaved token_nmin_wcs_smooth.png, token_nmin_sp_vs_wcs_smooth.png, token_nmin_mu_vs_gamma.png")
+
+    #plt.show()
 
 if __name__ == "__main__":
     main()
