@@ -1,0 +1,33 @@
+{
+    "label": "VeriQloud system",
+    "nZ": 10000000.0,
+    "Protocol_symmetric": false,
+    "plots_to_generate": ["1a", "1b", "2a","2b",3],
+    "edet": 0.03,
+    "d_operating_km": 25.0,
+    "d_max": 100,
+    "dead_us": 10.0,
+    "mu1": 0.17,
+    "mu2": 0.05,
+    "p1": 0.51,
+    "pZ": 0.9,
+    "fEC": 1.16,
+    "esec": 1e-09,
+    "ecor": 1e-15,
+    "K": 19,
+    "f_rep": 80000000.0,
+    "odr_losses": 11.4,
+    "eta_bob": 0.2,
+    "pdc": 6e-07,
+    "coeff": 0.78,
+    "f": 0.26,
+    "alpha": 0.23,
+        "afterpulse": {
+        "A": [0.32039698598403304, 0.032208330133852284],
+        "tau": [2.8724115466588267, 11.643131595469473], 
+        "R": 80
+    },
+    "disable_pap": true
+    
+
+}

@@ -1,5 +1,6 @@
 {
     "label": "Rusca 2018 SNSPD",
+    "plots_to_generate": ["1a", "1b", "2a","2b",3],
     "mu1": 0.5,
     "mu2": 0.1,
     "p1": 0.5,

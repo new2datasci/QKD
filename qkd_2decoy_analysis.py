@@ -9,11 +9,12 @@
 import math
 import numpy as np
 import matplotlib
-matplotlib.use('macosx')
+#matplotlib.use('macosx')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as ticker
 import warnings
+import os
 warnings.filterwarnings("ignore")
 
 # ============================================================
@@ -46,6 +47,8 @@ dead_us  = 10.0     # detector dead time (µs)
 
 # ── Sweep ────────────────────────────────────────────────────
 d_arr = np.linspace(1, 260, 600)
+
+save_dir   = os.path.dirname(os.path.abspath(__file__))
 
 # ============================================================
 #  CORE FUNCTIONS
@@ -287,7 +290,8 @@ ax6.legend(fontsize=7.5,loc='upper right')
 style(ax6,"6.  Secret Key Rate  [Lim Eq. 1 + Eq. B8]","bits/s",
     f"BB84 datasheet range: 10–10,000 bits/s at 25 dB")
 
-plt.savefig('/Users/ruchithareja/Documents/Python Decoy/Decoy/qkd_2decoy_bounds.png',
+
+plt.savefig(os.path.join(save_dir, f'fig2decoy.png'),
     dpi=150,bbox_inches='tight',facecolor='#FAFAFA')
 print("Figure 1 saved")
 
@@ -410,7 +414,7 @@ ax_qber.spines[['top','right']].set_visible(False)
 ax_qber.set_xlim(d_arr[0],d_arr[-1])
 
 plt.tight_layout()
-plt.savefig('/Users/ruchithareja/Documents/Python Decoy/Decoy/qkd_2decoy_comparison.png',
+plt.savefig(os.path.join(save_dir, f'fig2decoy_comparison.png'),
     dpi=150,bbox_inches='tight',facecolor='#FAFAFA')
 print("Figure 2 saved")
 plt.show()
