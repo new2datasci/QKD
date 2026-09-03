@@ -255,14 +255,14 @@ def main():
         ax2.set_ylabel(r"acquisition time at 80M qubits/s (s)", fontsize=11)
         return ax2
 
-    save_dir = "Quantum Token 2 decoy\\"
+
     # --- Figure 1: WCS only ---
     fig, ax = plt.subplots(figsize=(7.8, 5.0))
     ax.semilogy(gp[ok], W[ok], '-', color=RED, lw=2.6, label=f"WCS — 2-decoy, optimised ({tag})")
     ax.set_ylim(bottom=1e2)
     base(ax, f"Minimum token size — optimised 2-decoy WCS ($C={C}$, Aurea 25 km)")
     ax.legend(loc='upper left', fontsize=9.5); fig.tight_layout()
-    fig.savefig(save_dir+"token_nmin_wcs_smooth.png", dpi=160, bbox_inches="tight")
+    fig.savefig("Quantum Token 2 decoy/token_nmin_wcs_smooth.png", dpi=160, bbox_inches="tight")
 
     # --- Figure 2: SP vs WCS ---
     fig, ax = plt.subplots(figsize=(7.8, 5.0))
@@ -271,7 +271,7 @@ def main():
     ax.set_ylim(bottom=1e2)
     base(ax, f"Ideal single photon vs optimised 2-decoy WCS ($C={C}$)")
     ax.legend(loc='upper left', fontsize=9.5); fig.tight_layout()
-    fig.savefig(save_dir+"token_nmin_sp_vs_wcs_smooth.png", dpi=160, bbox_inches="tight")
+    fig.savefig("Quantum Token 2 decoy/token_nmin_sp_vs_wcs_smooth.png", dpi=160, bbox_inches="tight")
 
     # --- Figure 3: sampling-term trade (mu vs gamma) ---
     fig, ax = plt.subplots(figsize=(7.8, 5.0))
@@ -281,7 +281,7 @@ def main():
     ax.set_ylim(bottom=1e2)
     base(ax, f"Sampling-term trade: $\\gamma$ vs $\\mu$ ($C={C}$)")
     ax.legend(loc='upper left', fontsize=9.5); fig.tight_layout()
-    fig.savefig(save_dir+"token_nmin_mu_vs_gamma.png", dpi=160, bbox_inches="tight")
+    fig.savefig("Quantum Token 2 decoy/token_nmin_mu_vs_gamma.png", dpi=160, bbox_inches="tight")
 
 
     # --- table: n_min, photons sent, acquisition time (40M qubit/s) ---
