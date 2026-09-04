@@ -342,79 +342,76 @@ def compute_1decoy(d_km, e_det=edet):
     Ntot=nZ/(cdt*pZ**2*Pdt)
     return ell*f_rep/Ntot if Ntot>0 else 0
 
-fig2,(ax_cmp,ax_qber)=plt.subplots(1,2,figsize=(14,6))
-fig2.patch.set_facecolor('#FAFAFA')
-fig2.suptitle(
-    r"2-Decoy QKD — Comparison with 1-Decoy  &  Effect of QBER  "
-    rf"($n_Z=10^7$,  $\eta_{{Bob}}={eta_bob}$,  $\alpha={alpha}$ dB/km)",
-    fontsize=11,fontweight='bold',color=NAVY,y=1.01)
 
-# ── Left: 1-decoy vs 2-decoy at e_det=1% ────────────────────
+# ============================================================
+#  FIGURE — 1-decoy vs 2-decoy comparison (standalone, for report)
+# ============================================================
 skr_1d=np.array([compute_1decoy(d) for d in d_arr])
 skr_1d[skr_1d==0]=np.nan
-ax_cmp.semilogy(d_arr,res['skr'],color=BLUE,lw=2.0,label='2-Decoy (Lim)')
-ax_cmp.semilogy(d_arr,skr_1d,  color=NAVY,lw=2.0,ls='--',label='1-Decoy (Rusca)')
-ax_cmp.axvline(83.8,color=GREY,lw=0.8,ls=':',alpha=0.6)
-ax_cmp.text(85,1e4,'25 dB\n83.8 km',fontsize=7,color=GREY,va='top')
-ax_cmp.axhline(10000,color=AMBER,lw=0.8,ls=':',alpha=0.7,label='10 kbits/s')
-ax_cmp.axhline(10,   color=GREY, lw=0.8,ls=':',alpha=0.7,label='10 bits/s')
 
-# Key comparison box
+figc,ax_cmp=plt.subplots(figsize=(8.2,5.6))
+figc.patch.set_facecolor('white')
+ax_cmp.semilogy(d_arr,res['skr'],color=BLUE,lw=2.2,label='2-Decoy (Lim)')
+ax_cmp.semilogy(d_arr,skr_1d,   color=NAVY,lw=2.2,ls='--',label='1-Decoy (Rusca)')
+ax_cmp.axvline(83.8,color=GREY,lw=0.8,ls=':',alpha=0.6)
+ax_cmp.text(85,1.4e4,'25 dB\n83.8 km',fontsize=8,color=GREY,va='top')
+ax_cmp.axhline(10000,color=AMBER,lw=0.9,ls=':',alpha=0.7,label='10 kbit/s')
+
 skr_2d_25=res['skr'][np.argmin(np.abs(d_arr-83.8))]
 skr_1d_25=skr_1d[np.argmin(np.abs(d_arr-83.8))]
-pos_2d=~np.isnan(res['skr'])&(res['skr']>0)
-pos_1d=~np.isnan(skr_1d)
+pos_2d=~np.isnan(res['skr'])&(res['skr']>0); pos_1d=~np.isnan(skr_1d)
 d_max_2d=d_arr[pos_2d][-1] if pos_2d.any() else 0
 d_max_1d=d_arr[pos_1d][-1] if pos_1d.any() else 0
-ax_cmp.text(0.02,0.04,
+ax_cmp.text(0.03,0.04,
     f"At 25 dB (83.8 km),  e_det=1%:\n"
-    f"1-Decoy: {skr_1d_25:.0f} b/s  (max {d_max_1d:.0f} km)\n"
-    f"2-Decoy: {skr_2d_25:.0f} b/s  (max {d_max_2d:.0f} km)\n"
+    f"1-Decoy (Rusca): {skr_1d_25:,.0f} b/s  (max {d_max_1d:.0f} km)\n"
+    f"2-Decoy (Lim):   {skr_2d_25:,.0f} b/s  (max {d_max_2d:.0f} km)\n"
     f"1-Decoy wins by {(skr_1d_25/skr_2d_25-1)*100:.0f}% at 25 dB",
-    transform=ax_cmp.transAxes,fontsize=7.5,
-    bbox=dict(boxstyle='round,pad=0.4',fc='#EEF4FB',ec=BLUE,alpha=0.95))
-
-ax_cmp.legend(fontsize=8,loc='upper right')
-ax_cmp.set_xlabel("Fibre distance (km)",fontsize=9)
-ax_cmp.set_ylabel("SKR (bits/s)",fontsize=9)
-ax_cmp.set_title("1-Decoy vs 2-Decoy  (e_det=1%)",
-    fontsize=10,fontweight='bold',color=NAVY)
-ax_cmp.grid(True,alpha=0.25,lw=0.5)
+    transform=ax_cmp.transAxes,fontsize=8.3,va='bottom',
+    bbox=dict(boxstyle='round,pad=0.4',fc='white',ec=BLUE,alpha=0.95))
+ax_cmp.legend(fontsize=9,loc='upper right')
+ax_cmp.set_xlabel("Fibre distance (km)",fontsize=10)
+ax_cmp.set_ylabel("SKR (bits/s)",fontsize=10)
+ax_cmp.set_title(
+    rf"One-decoy (Rusca) vs two-decoy (Lim)  "
+    rf"($n_Z=10^7$, $\eta_{{Bob}}={eta_bob}$, $\alpha={alpha}$ dB/km, $e_{{det}}=1\%$)",
+    fontsize=10.5,fontweight='bold',color=NAVY)
+ax_cmp.grid(True,which='both',alpha=0.22,lw=0.5)
 ax_cmp.spines[['top','right']].set_visible(False)
-ax_cmp.set_xlim(d_arr[0],d_arr[-1])
+ax_cmp.set_xlim(0,d_arr[-1])
+figc.tight_layout()
+figc.savefig(os.path.join(save_dir,'fig_rusca_lim_comparison.png'),
+    dpi=150,bbox_inches='tight',facecolor='white')
+print("saved fig_rusca_lim_comparison.png")
 
-# ── Right: 2-decoy SKR for varying QBER ─────────────────────
+# ============================================================
+#  FIGURE — 2-decoy SKR for varying QBER (standalone)
+# ============================================================
+figq,ax_qber=plt.subplots(figsize=(8.2,5.6))
+figq.patch.set_facecolor('white')
 edets  =[0.01, 0.02, 0.03, 0.05, 0.07]
 labels =['1%','2%','3%','5%','7%']
 colors_=[NAVY,BLUE,GREEN,AMBER,RED]
-
 for ev,lbl,col in zip(edets,labels,colors_):
     skr_v=np.full(len(d_arr),np.nan)
     for i,d in enumerate(d_arr):
         r=compute_all(d,e_det=ev)
         if r and r['skr']>0: skr_v[i]=r['skr']
     ax_qber.semilogy(d_arr,skr_v,color=col,lw=1.8,label=f'e_det={lbl}')
-
 ax_qber.axhspan(10,10000,color=BLUE,alpha=0.05,label='BB84 datasheet range')
 ax_qber.axhline(10000,color=BLUE,lw=0.8,ls='--',alpha=0.5)
-ax_qber.axhline(10,   color=BLUE,lw=0.8,ls='--',alpha=0.5)
-ax_qber.axvline(83.8, color=GREY,lw=0.8,ls=':',alpha=0.6)
-ax_qber.text(85,1e4,'25 dB',fontsize=7,color=GREY,va='top')
-ax_qber.text(0.02,0.04,
-    "At 25 dB:\ne_det=1% → 10,146 b/s\ne_det=3% →  1,771 b/s\ne_det≥4% →  no key",
-    transform=ax_qber.transAxes,fontsize=7.5,
-    bbox=dict(boxstyle='round,pad=0.4',fc='#EEF4FB',ec=BLUE,alpha=0.95))
-ax_qber.legend(fontsize=8,loc='upper right')
-ax_qber.set_xlabel("Fibre distance (km)",fontsize=9)
-ax_qber.set_ylabel("SKR (bits/s)",fontsize=9)
-ax_qber.set_title("2-Decoy SKR for varying QBER",
-    fontsize=10,fontweight='bold',color=NAVY)
-ax_qber.grid(True,alpha=0.25,lw=0.5)
+ax_qber.axhline(10,    color=BLUE,lw=0.8,ls='--',alpha=0.5)
+ax_qber.axvline(83.8,  color=GREY,lw=0.8,ls=':',alpha=0.6)
+ax_qber.text(85,1e4,'25 dB',fontsize=8,color=GREY,va='top')
+ax_qber.legend(fontsize=9,loc='upper right')
+ax_qber.set_xlabel("Fibre distance (km)",fontsize=10)
+ax_qber.set_ylabel("SKR (bits/s)",fontsize=10)
+ax_qber.set_title("2-Decoy SKR for varying QBER",fontsize=10.5,fontweight='bold',color=NAVY)
+ax_qber.grid(True,which='both',alpha=0.22,lw=0.5)
 ax_qber.spines[['top','right']].set_visible(False)
-ax_qber.set_xlim(d_arr[0],d_arr[-1])
-
-plt.tight_layout()
-plt.savefig(os.path.join(save_dir, f'fig2decoy_comparison.png'),
-    dpi=150,bbox_inches='tight',facecolor='#FAFAFA')
-print("Figure 2 saved")
+ax_qber.set_xlim(0,d_arr[-1])
+figq.tight_layout()
+figq.savefig(os.path.join(save_dir,'fig2decoy_qber.png'),
+    dpi=150,bbox_inches='tight',facecolor='white')
+print("saved fig2decoy_qber.png")
 plt.show()
