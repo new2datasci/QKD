@@ -182,7 +182,7 @@ def compute_all(d_km, e_det=edet, p1=p1, pZ_in=None, mu1_in=None, mu2_in=None,
     eta = 10**(-(alpha*d_km+odr_losses)/10) * eta_bob
 
 
-    # Detection probabilities per legetimate pulses
+    # Detection probabilities per legitimate pulses
     pq1 = 1 - np.exp(-mu1_use*eta) 
     pq2 = 1 - np.exp(-mu2_use*eta) 
     
